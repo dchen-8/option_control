@@ -33,6 +33,11 @@ class Tradier:
         except requests.RequestException as e:
             return e
 
+    def get_clock(self):
+        api_endpoint = '/v1/markets/clock'
+        response = self.request(api_endpoint)
+        return response.get('clock')
+
     def get_calendar(self, month: str, year: str):
         api_endpoint = '/v1/markets/calendar'
         params = {'month': month, 'year': year}

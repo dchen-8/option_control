@@ -1,6 +1,7 @@
 import tradier_api_util
 import influxdb_util
 
+import datetime
 import schedule
 import time
 import threading
@@ -42,9 +43,28 @@ class OptionControl(object):
 
         # Turn on Continuous Scheduler
         self.scheduler.run_continuously()
-    
-    def test_job(self):
-        self.scheduler.every(10).seconds.do(self.save_stock_data)
+
+    def schedule_calendar_check(self):
+        self.scheduler.every().day.at('06:00').do(self.check_market_open)
+
+    def check_market_open(self):
+        clock_data = self.tradier.get_clock()
+
+        # If the next state is open; schedule job to query once a min.
+        if clock_data.get('next_state') == 'open':
+            self.schedule_stocks_run()
+
+    def schedule_stocks_run(self):
+        stock_market_open = datetime.datetime.strptime('06:30', '%H:%M')
+        stock_market_close = datetime.datetime.strptime('13:00', '%H:%M')
+
+        total_trading_minutes = int((stock_market_close - stock_market_open).seconds/60)
+
+        for each_min in range(total_trading_minutes + 1):
+            schedule_run = stock_market_open + datetime.timedelta(minutes=each_min)
+            schedule_run_str = schedule_run.strftime('%H:%M')
+            self.scheduler.every().day.at(schedule_run_str).do(self.save_stock_data).tag('stock_runs')
+        print(self.scheduler.jobs)
 
     def save_stock_data(self):
         results = self.collect_stock_data()
@@ -59,17 +79,9 @@ class OptionControl(object):
 
 def main(argv):
     del argv  # Unused.
-#     tradier = tradier_api_util.Tradier()
-# #   results = tradier.get_symbol('aapl', return_for_influx=True)
-#     results = tradier.get_calendar('10', '2020')
-#     print(results)
 
     option_control = OptionControl()
-    option_control.test_job()
-
-    # client = influxdb_util.OptionControlInfluxDB(database='calendar')
-    # client._client.create_database('calendar')
-    # client.write(results)
+    option_control.schedule_calendar_check()
 
 
 if __name__ == '__main__':
