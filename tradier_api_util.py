@@ -1,10 +1,10 @@
-
+import os
 import requests
 
 from collections import defaultdict
 from typing import Mapping, List, Union
 
-TRADIER_AUTH_TOKEN = ''
+TRADIER_AUTH_TOKEN = os.environ['TRADIER_AUTH_TOKEN']
 
 STOCKS_MAPPING = {
     'time': [],
