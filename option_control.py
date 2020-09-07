@@ -43,6 +43,7 @@ class OptionControl(object):
 
         # Turn on Continuous Scheduler
         self.scheduler.run_continuously()
+        print('OptionControl started!')
 
     def schedule_calendar_check(self):
         self.scheduler.every().day.at('06:00').do(self.check_market_open)
@@ -82,8 +83,10 @@ class OptionControl(object):
 def main(argv):
     del argv  # Unused.
 
+    print('Main thread started!')
     option_control = OptionControl()
     option_control.schedule_calendar_check()
+    print('Main thread exiting!!!')
 
 
 if __name__ == '__main__':
