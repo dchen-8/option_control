@@ -46,12 +46,14 @@ class OptionControl(object):
 
     def schedule_calendar_check(self):
         self.scheduler.every().day.at('06:00').do(self.check_market_open)
+        print('Scheduled job: Calendar Check -', datetime.datetime.now())
 
     def check_market_open(self):
         clock_data = self.tradier.get_clock()
 
         # If the next state is open; schedule job to query once a min.
         if clock_data.get('next_state') == 'open':
+            print('Scheduled job: Stocks Run -', datetime.datetime.now())
             self.schedule_stocks_run()
 
     def schedule_stocks_run(self):
@@ -64,7 +66,7 @@ class OptionControl(object):
             schedule_run = stock_market_open + datetime.timedelta(minutes=each_min)
             schedule_run_str = schedule_run.strftime('%H:%M')
             self.scheduler.every().day.at(schedule_run_str).do(self.save_stock_data).tag('stock_runs')
-        print(self.scheduler.jobs)
+        print('Scheduled {} jobs!'.format(self.scheduler.jobs))
 
     def save_stock_data(self):
         results = self.collect_stock_data()
