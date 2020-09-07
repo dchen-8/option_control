@@ -4,7 +4,7 @@ import requests
 from collections import defaultdict
 from typing import Mapping, List, Union
 
-TRADIER_AUTH_TOKEN = 'HCoaFOyII69lCSLtKeGSDGHwAAIU'
+TRADIER_AUTH_TOKEN = ''
 
 STOCKS_MAPPING = {
     'time': [],
