@@ -1,10 +1,11 @@
 import os
+import datetime
 import requests
 
 from collections import defaultdict
 from typing import Mapping, List, Union
 
-TRADIER_AUTH_TOKEN = os.environ['TRADIER_AUTH_TOKEN']
+TRADIER_AUTH_TOKEN = os.environ.get('TRADIER_AUTH_TOKEN')
 
 STOCKS_MAPPING = {
     'time': [],
@@ -25,6 +26,10 @@ class Tradier:
  
     def request(self, api_endpoint: str, params: Mapping[str, str] = {}):
         url = self._base_url + api_endpoint
+
+        if not TRADIER_AUTH_TOKEN:
+            raise ValueError('Missing TRADIER_AUTH_TOKEN')
+
         try:
             response = requests.get(url, headers=self.headers, params=params)
             if response.status_code == 200:
@@ -32,6 +37,44 @@ class Tradier:
             return None
         except requests.RequestException as e:
             return e
+
+    def get_three_months_historical_stocks(self, stock):
+        today = datetime.datetime.now()
+        three_months_ago = today - datetime.timedelta(days=30)
+        params = {
+            'symbol': stock,
+            'interval': 'daily',
+            'start': three_months_ago.strftime('%Y-%m-%d'),
+            'end': today.strftime('%Y-%m-%d')
+        }
+        print(params)
+        api_endpoint = '/v1/markets/history'
+        response = self.request(api_endpoint, params)
+        print(response)
+        return self.parse_historical_stocks(response, stock)
+
+    def parse_historical_stocks(self, data, symbol):
+        historical_data = data.get('history').get('day')
+        results = []
+        for day in historical_data:
+            result = defaultdict(dict)
+
+            # Measurements
+            result['measurement'] = 'historical_stocks'
+
+            # Tags
+            result['tags']['date'] = day.get('date')
+            result['tags']['symbol'] = symbol
+
+            # Fields
+            result['fields']['open'] = day.get('open')
+            result['fields']['high'] = day.get('high')
+            result['fields']['low'] = day.get('low')
+            result['fields']['close'] = day.get('close')
+            result['fields']['volume'] = day.get('volume')
+        
+            results.append(result)
+        return results
 
     def get_clock(self):
         api_endpoint = '/v1/markets/clock'

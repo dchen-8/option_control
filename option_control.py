@@ -40,6 +40,8 @@ class OptionControl(object):
         self.scheduler = ContinuousScheduler()
         self.tradier = tradier_api_util.Tradier()
         self.influx_client = influxdb_util.OptionControlInfluxDB(database='options')
+        # TODO: Remove hard coded list of stocks
+        self.stock_list = 'aapl,goog,tsla,bac,dis'
 
         # Turn on Continuous Scheduler
         self.scheduler.run_continuously()
@@ -76,8 +78,19 @@ class OptionControl(object):
         return schedule.CancelJob
 
     def collect_stock_data(self):
-        stock_list = 'aapl,goog,tsla,bac,dis'
-        return self.tradier.get_symbol(stock_list, return_for_influx=True)
+        return self.tradier.get_symbol(self.stock_list, return_for_influx=True)
+
+    def save_historical_stock_data(self):
+        # This is used if there is a need to backfil some data, all the previous data is not overriden
+        # There could be a case for modifying the time stamps; but possibly be done during ETL
+        results = self.collect_historical_stock_data()
+        self.influx_client.write(results, 'historical_stocks')
+
+    def collect_historical_stock_data(self):
+        results = []
+        for symbol in self.stock_list.split(','):
+            results += self.tradier.get_three_months_historical_stocks(symbol)
+        return results
 
 
 def main(argv):
