@@ -1,6 +1,6 @@
 
 import requests
-from absl import app
+
 from collections import defaultdict
 from typing import Mapping, List, Union
 
@@ -115,17 +115,3 @@ class Tradier:
             results.append(result)
         
         return results
-
-def main(argv):
-    del argv  # Unused.
-    tradier = Tradier()
-#   result = tradier.get_symbol('aapl,goog')
-#   result = tradier.parse_to_mapping(result)
-#   print(result)
-    results = tradier.get_calendar('10', '2020')
-
-
-
-
-if __name__ == '__main__':
-  app.run(main)
