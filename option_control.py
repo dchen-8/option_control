@@ -54,11 +54,16 @@ class OptionControl(object):
 
 	def check_market_open(self):
 		clock_data = self.tradier.get_clock()
+		print(clock_data)
 
 		# If the next state is open; schedule job to query once a min.
 		if clock_data.get('next_state') == 'open':
 			print('Scheduled job: Stocks Run -', datetime.datetime.now())
 			self.schedule_stocks_run()
+
+	def schedule_stock_data_min(self):
+		self.scheduler.every(1).minute.do(self.save_stock_data)
+		print('Scheduled Stock Jobs!')
 
 	def schedule_stocks_run(self):
 		stock_market_open = datetime.datetime.strptime('06:30', '%H:%M')
@@ -76,7 +81,8 @@ class OptionControl(object):
 		results = self.collect_stock_data()
 
 		self.influx_client.write(results, 'stocks')
-		return schedule.CancelJob
+		print(self.scheduler.jobs)
+		# return schedule.CancelJob
 
 	def collect_stock_data(self):
 		return self.tradier.get_symbol(self.stock_list, return_for_influx=True)
@@ -99,7 +105,8 @@ def main(argv):
 
 	print('Main thread started!')
 	option_control = OptionControl()
-	option_control.schedule_calendar_check()
+	# option_control.schedule_calendar_check()
+	option_control.schedule_stock_data_min()
 	print('Main thread exiting!!!')
 
 
