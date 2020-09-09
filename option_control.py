@@ -5,8 +5,11 @@ import datetime
 import schedule
 import time
 import threading
+import pytz
 
 from absl import app
+
+PACIFIC_TZ = pytz.timezone('US/Pacific')
 
 class ContinuousScheduler(schedule.Scheduler):
 	def run_continuously(self, interval=1):
@@ -48,39 +51,27 @@ class OptionControl(object):
 		print('OptionControl started!')
 
 	def schedule_calendar_check(self):
-		self.scheduler.every().day.at('06:00').do(self.check_market_open)
+		self.scheduler.every().day.at('06:00').do(self.schedule_stock_data_minute)
 		print(self.scheduler.jobs)
 		print('Scheduled job: Calendar Check -', datetime.datetime.now())
 
-	def check_market_open(self):
-		clock_data = self.tradier.get_clock()
-		print(clock_data)
+	def schedule_stock_data_minute(self):
 
-		# If the next state is open; schedule job to query once a min.
-		if clock_data.get('next_state') == 'open':
-			print('Scheduled job: Stocks Run -', datetime.datetime.now())
-			self.schedule_stocks_run()
+		today = datetime.datetime.now(tz=PACIFIC_TZ)
 
-	def schedule_stock_data_min(self):
-		self.scheduler.every(1).minute.do(self.save_stock_data)
-		print('Scheduled Stock Jobs!')
+		stock_market_open = today.replace(hour=1, minute=0, second=0, microsecond=0)
+		stock_market_close = today.replace(hour=20, minute=0, second=0, microsecond=0)
 
-	def schedule_stocks_run(self):
-		stock_market_open = datetime.datetime.strptime('06:30', '%H:%M')
-		stock_market_close = datetime.datetime.strptime('13:00', '%H:%M')
+		if stock_market_open < today < stock_market_close:
+			self.scheduler.every(1).minute.do(self.save_stock_data, stock_market_close).tag('stock_runs')
+			print('Scheduled Stock Jobs!')
 
-		total_trading_minutes = int((stock_market_close - stock_market_open).seconds/60)
-
-		for each_min in range(total_trading_minutes + 1):
-			schedule_run = stock_market_open + datetime.timedelta(minutes=each_min)
-			schedule_run_str = schedule_run.strftime('%H:%M')
-			self.scheduler.every().day.at(schedule_run_str).do(self.save_stock_data).tag('stock_runs')
-		print('Scheduled {} jobs!'.format(self.scheduler.jobs))
-
-	def save_stock_data(self):
+	def save_stock_data(self, end):
 		results = self.collect_stock_data()
 
 		self.influx_client.write(results, 'stocks')
+		if self.scheduler.next_run.astimezone(PACIFIC_TZ) > end:
+			self.scheduler.clear(tag='stock_runs')
 		print(self.scheduler.jobs)
 		# return schedule.CancelJob
 
@@ -105,8 +96,7 @@ def main(argv):
 
 	print('Main thread started!')
 	option_control = OptionControl()
-	# option_control.schedule_calendar_check()
-	option_control.schedule_stock_data_min()
+	option_control.schedule_calendar_check()
 	print('Main thread exiting!!!')
 
 
