@@ -35,6 +35,10 @@ class Tradier:
             if response.status_code == 200:
                 return response.json()
             return None
+        except requests.ConnectionError as e:
+            return e
+        except requests.HTTPError as e:
+            return e
         except requests.RequestException as e:
             return e
 
