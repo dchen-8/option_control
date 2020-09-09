@@ -34,13 +34,14 @@ class Tradier:
             response = requests.get(url, headers=self.headers, params=params)
             if response.status_code == 200:
                 return response.json()
-            return None
+            return {}
         except requests.ConnectionError as e:
-            return e
+            print(e)
         except requests.HTTPError as e:
-            return e
+            print(e)
         except requests.RequestException as e:
-            return e
+            print(e)
+        return {}
 
     def get_three_months_historical_stocks(self, stock):
         today = datetime.datetime.now()
@@ -137,7 +138,7 @@ class Tradier:
 
     def symbol_to_list(
         self, data: Mapping[str, Union[str, int]]) -> List[Mapping[str, Union[str, int]]]:
-        results = data.get('quotes').get('quote')
+        results = data.get('quotes', {}).get('quote')
         if not isinstance(results, List):
             return [results]
         return results
