@@ -44,7 +44,7 @@ class OptionControl(object):
 		self.tradier = tradier_api_util.Tradier()
 		self.influx_client = influxdb_util.OptionControlInfluxDB(database='options')
 		# TODO: Remove hard coded list of stocks
-		self.stock_list = 'aapl,goog,tsla,bac,dis'
+		self.stock_list = 'aapl,goog,tsla,bac,dis,amzn,fb,nflx,apha'
 
 		# Turn on Continuous Scheduler
 		self.scheduler.run_continuously()
