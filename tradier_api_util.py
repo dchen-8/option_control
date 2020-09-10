@@ -34,14 +34,14 @@ class Tradier:
             response = requests.get(url, headers=self.headers, params=params)
             if response.status_code == 200:
                 return response.json()
-            return {}
+            return None
         except requests.ConnectionError as e:
             print(e)
         except requests.HTTPError as e:
             print(e)
         except requests.RequestException as e:
             print(e)
-        return {}
+        return None
 
     def get_three_months_historical_stocks(self, stock):
         today = datetime.datetime.now()
@@ -59,6 +59,8 @@ class Tradier:
         return self.parse_historical_stocks(response, stock)
 
     def parse_historical_stocks(self, data, symbol):
+        if not data:
+            pass
         historical_data = data.get('history').get('day')
         results = []
         for day in historical_data:
@@ -95,6 +97,8 @@ class Tradier:
 
     def _calendar_to_list(self, data):
         results = []
+        if not data:
+            pass
         calendar_dates = data.get('calendar').get('days').get('day')
         for row in calendar_dates:
             result = defaultdict(dict)
@@ -138,6 +142,8 @@ class Tradier:
 
     def symbol_to_list(
         self, data: Mapping[str, Union[str, int]]) -> List[Mapping[str, Union[str, int]]]:
+        if not data:
+            pass
         results = data.get('quotes', {}).get('quote')
         if not isinstance(results, List):
             return [results]
