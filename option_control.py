@@ -107,8 +107,8 @@ def main(argv):
 
 	print('Main thread started!')
 	option_control = OptionControl()
-	option_control.schedule_calendar_check()
-	# option_control.schedule_stock_data_minute()
+	# option_control.schedule_calendar_check()
+	option_control.schedule_stock_data_minute()
 	print('Main thread exiting!!!')
 
 
