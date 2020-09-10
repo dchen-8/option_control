@@ -75,7 +75,7 @@ class OptionControl(object):
 	def save_stock_data(self, end):
 		results = self.collect_stock_data()
 
-		if not results:
+		if results:
 			self.influx_client.write(results, 'stocks')
 		else:
 			print("Tradier API returned no stock data!")
