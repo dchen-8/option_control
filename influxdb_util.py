@@ -1,5 +1,6 @@
 # /usr/local/bin/python3
 
+from collections import defaultdict
 from influxdb import InfluxDBClient
 from typing import List, Mapping
 
@@ -17,3 +18,11 @@ class OptionControlInfluxDB():
         if db_name:
             self.switch_database(db_name)
         self._client.write_points(data_to_write)
+    
+    def get_option_expirations(self):
+        self.switch_database('options')
+        response = self._client.query('SELECT * FROM options_expiration')
+        results = defaultdict(list)
+        for each in response.get_points():
+            results[each['symbol']].append(each['dates'])
+        return results

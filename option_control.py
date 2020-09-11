@@ -55,12 +55,26 @@ class OptionControl(object):
 		self.scheduler.every().day.at('11:30').do(self.schedule_stock_data_minute)
 		# Schedule job to return the current running jobs.
 		self.scheduler.every().hour.at(':00').do(self.jobs_check)
+		# Schedule daily job to get option expirations. Refresh around midnight
+		self.scheduler.every().day.at('07:30').do(self.save_option_expirations).tag('daily_option_expiration')
 		print(self.scheduler.jobs)
 		print('Scheduled job: Calendar Check -', datetime.datetime.now())
 
 	def jobs_check(self):
 		print('Printing Job Check!')
 		print(self.scheduler.jobs)
+
+	def query_influx_options_expiration(self):
+		results = self.influx_client.get_option_expirations()
+		return results
+
+	def save_option_expirations(self):
+		results = []
+		for symbol in self.stock_list.split(','):
+			results += self.tradier.get_option_expiration(symbol)
+		
+		if results:
+			self.influx_client.write(results, 'options')
 
 	def schedule_stock_data_minute(self):
 
@@ -108,7 +122,8 @@ def main(argv):
 
 	print('Main thread started!')
 	option_control = OptionControl()
-	# option_control.schedule_calendar_check()
+	# option_control.query_influx_options_expiration()
+	option_control.schedule_calendar_check()
 	# option_control.schedule_stock_data_minute()
 	print('Main thread exiting!!!')
 

@@ -43,6 +43,40 @@ class Tradier:
             print(e)
         return None
 
+    def get_option_chain_data(self, symbol, expiration):
+        api_endpoint = '/v1/markets/options/chains'
+        params = {
+            'symbol': symbol,
+            'expiration': expiration
+        }
+        response = self.request(api_endpoint, params) 
+        print(len(response.get('options').get('option')))
+        return response
+
+    def get_option_expiration(self, symbol):
+        api_endpoint = '/v1/markets/options/expirations'
+        params = {
+            'symbol': symbol,
+        }
+        response = self.request(api_endpoint, params)
+        if not response:
+            return None
+        dates = response['expirations']['date']
+        results = []
+        for date in dates:
+            values = {
+                'measurement': 'options_expiration',
+                'tags': {
+                    'dates': date,
+                    'symbol': symbol
+                },
+                'fields': {
+                    'value': 1
+                }
+            }
+            results.append(values)
+        return results
+
     def get_three_months_historical_stocks(self, stock):
         today = datetime.datetime.now()
         three_months_ago = today - datetime.timedelta(days=30)
