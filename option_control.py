@@ -59,6 +59,7 @@ class OptionControl(object):
 		print('Scheduled job: Calendar Check -', datetime.datetime.now())
 
 	def jobs_check(self):
+		print('Printing Job Check!')
 		print(self.scheduler.jobs)
 
 	def schedule_stock_data_minute(self):
@@ -108,7 +109,7 @@ def main(argv):
 	print('Main thread started!')
 	option_control = OptionControl()
 	# option_control.schedule_calendar_check()
-	option_control.schedule_stock_data_minute()
+	# option_control.schedule_stock_data_minute()
 	print('Main thread exiting!!!')
 
 
