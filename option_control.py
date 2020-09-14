@@ -51,8 +51,6 @@ class OptionControl(object):
 		print('OptionControl started!')
 
 	def schedule_calendar_check(self):
-		today = datetime.datetime.now(tz=PACIFIC_TZ)
-		print(self.get_today_market_status(today))
 		# 11:30AM should be 4:30AM PST time; Market should open around 1AM
 		self.scheduler.every().day.at('11:30').do(self.schedule_stock_data_minute)
 		# Schedule job to return the current running jobs.
