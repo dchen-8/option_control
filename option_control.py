@@ -51,6 +51,8 @@ class OptionControl(object):
 		print('OptionControl started!')
 
 	def schedule_calendar_check(self):
+		today = datetime.datetime.now(tz=PACIFIC_TZ)
+		print(self.get_today_market_status(today))
 		# 11:30AM should be 4:30AM PST time; Market should open around 1AM
 		self.scheduler.every().day.at('11:30').do(self.schedule_stock_data_minute)
 		# Schedule job to return the current running jobs.
@@ -76,14 +78,26 @@ class OptionControl(object):
 		if results:
 			self.influx_client.write(results, 'options')
 
+	def get_today_market_status(self, today):
+		today_str = today.strftime('%Y-%m-%d')
+		today_year = today.strftime('%Y')
+		today_month = today.strftime('%m')
+
+		# Check calendar if the market is open today
+		calendar_results = self.tradier.get_calendar(year=today_year, month=today_month)
+		calendar_dates = calendar_results['calendar']['days']['day']
+		today_status = [x for x in calendar_dates if x['date'] == today_str][0]
+		return today_status
+
 	def schedule_stock_data_minute(self):
 
 		today = datetime.datetime.now(tz=PACIFIC_TZ)
-
 		stock_market_open = today.replace(hour=1, minute=0, second=0, microsecond=0)
 		stock_market_close = today.replace(hour=17, minute=0, second=0, microsecond=0)
 
-		if stock_market_open < today < stock_market_close:
+		today_market_status = self.get_today_market_status(today)
+
+		if stock_market_open < today < stock_market_close and today_market_status['status'] == 'open':
 			self.scheduler.every(1).minute.do(self.save_stock_data, stock_market_close).tag('stock_runs')
 			print('Scheduled Stock Jobs!')
 

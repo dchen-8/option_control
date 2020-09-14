@@ -126,8 +126,8 @@ class Tradier:
         api_endpoint = '/v1/markets/calendar'
         params = {'month': month, 'year': year}
         response = self.request(api_endpoint, params)
-        results = self._calendar_to_list(response)
-        return results
+        # results = self._calendar_to_list(response)
+        return response
 
     def _calendar_to_list(self, data):
         results = []
