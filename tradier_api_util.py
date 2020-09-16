@@ -93,7 +93,7 @@ class Tradier:
         return self.parse_historical_stocks(response, stock)
 
     def parse_historical_stocks(self, data, symbol):
-        if not data:
+        if data is None:
             pass
         historical_data = data.get('history').get('day')
         results = []
@@ -131,7 +131,7 @@ class Tradier:
 
     def _calendar_to_list(self, data):
         results = []
-        if not data:
+        if data is None:
             pass
         calendar_dates = data.get('calendar').get('days').get('day')
         for row in calendar_dates:
@@ -176,7 +176,7 @@ class Tradier:
 
     def symbol_to_list(
         self, data: Mapping[str, Union[str, int]]) -> List[Mapping[str, Union[str, int]]]:
-        if not data:
+        if data is None:
             pass
         results = data.get('quotes', {}).get('quote')
         if not isinstance(results, List):
