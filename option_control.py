@@ -6,6 +6,7 @@ import schedule
 import time
 import threading
 import pytz
+import pprint
 
 from absl import app
 
@@ -51,18 +52,25 @@ class OptionControl(object):
 		print('OptionControl started!')
 
 	def schedule_calendar_check(self):
+		# On Docker start; Check if Market is open and schedule Stock Runs
+		self.schedule_stock_data_minute()
 		# 11:30AM should be 4:30AM PST time; Market should open around 1AM
 		self.scheduler.every().day.at('11:30').do(self.schedule_stock_data_minute)
 		# Schedule job to return the current running jobs.
 		self.scheduler.every().hour.at(':00').do(self.jobs_check)
 		# Schedule daily job to get option expirations. Refresh around midnight
 		self.scheduler.every().day.at('07:30').do(self.save_option_expirations).tag('daily_option_expiration')
-		print(self.scheduler.jobs)
+		pprint.pprint(self.scheduler.jobs)
 		print('Scheduled job: Calendar Check -', datetime.datetime.now())
 
 	def jobs_check(self):
 		print('Printing Job Check!')
-		print(self.scheduler.jobs)
+		current_jobs = self.scheduler.jobs
+		pprint.pprint(current_jobs)
+		# Check if job.tags currently has stock_runs schedule, if not schedule.
+		current_tags = [job.tags for job in current_jobs]
+		if 'stock_runs' not in current_tags:
+			self.schedule_stock_data_minute()
 
 	def query_influx_options_expiration(self):
 		results = self.influx_client.get_option_expirations()
