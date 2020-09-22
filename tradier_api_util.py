@@ -20,7 +20,7 @@ STOCKS_MAPPING = {
 
 class Tradier:
     def __init__(self):
-        self._base_url = 'https://sandbox.tradier.com'
+        self._base_url = 'https://api.tradier.com/'
         self.headers  = {"Accept": "application/json",
                           "Authorization": "Bearer {}".format(TRADIER_AUTH_TOKEN)}
  
