@@ -86,11 +86,11 @@ class Tradier:
             'start': three_months_ago.strftime('%Y-%m-%d'),
             'end': today.strftime('%Y-%m-%d')
         }
-        print(params)
         api_endpoint = '/v1/markets/history'
         response = self.request(api_endpoint, params)
-        print(response)
-        return self.parse_historical_stocks(response, stock)
+        if response is None or not response:
+            return None
+        return response.get('history').get('day')
 
     def parse_historical_stocks(self, data, symbol):
         if data is None or not data:

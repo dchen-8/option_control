@@ -1,5 +1,6 @@
 import tradier_api_util
 import influxdb_util
+import mongo_client
 
 import datetime
 import schedule
@@ -44,6 +45,7 @@ class OptionControl(object):
 		self.scheduler = ContinuousScheduler()
 		self.tradier = tradier_api_util.Tradier()
 		self.influx_client = influxdb_util.OptionControlInfluxDB(database='options')
+		self.mongo_client = mongo_client.Connect.get_connection()
 		# TODO: Remove hard coded list of stocks
 		self.stock_list = 'aapl,goog,tsla,bac,dis,amzn,fb,nflx,apha'
 
@@ -130,10 +132,19 @@ class OptionControl(object):
 		if results:
 			self.influx_client.write(results, 'historical_stocks')
 
+	def write_historical_to_mongo(self):
+		results = self.collect_historical_stock_data()
+		stocks_db = self.mongo_client.stocks
+		# Write to historical stocks table
+		stocks_db.historical_stocks.insert_many(results)
+
 	def collect_historical_stock_data(self):
 		results = []
 		for symbol in self.stock_list.split(','):
-			results += self.tradier.get_three_months_historical_stocks(symbol)
+			result = self.tradier.get_three_months_historical_stocks(symbol)
+			for each_day in result:
+				each_day['symbol'] = symbol
+				results.append(each_day)
 		return results
 
 
