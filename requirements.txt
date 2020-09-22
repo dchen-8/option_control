@@ -5,3 +5,5 @@ typing
 schedule
 pytz
 pymongo
+asyncio
+websockets
