@@ -55,6 +55,7 @@ class OptionControl(object):
 		print('OptionControl started!')
 
 	def schedule_calendar_check(self):
+		self.tradier_streaming_start()
 		# On Docker start; Check if Market is open and schedule Stock Runs
 		self.schedule_stock_data_minute()
 		# 11:30AM should be 4:30AM PST time; Market should open around 1AM
