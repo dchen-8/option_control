@@ -176,9 +176,13 @@ class Tradier:
 
     def symbol_to_list(
         self, data: Mapping[str, Union[str, int]]) -> List[Mapping[str, Union[str, int]]]:
-        if data is None or not data:
-            pass
-        results = data.get('quotes', {}).get('quote')
+        try:
+            results = data.get('quotes').get('quote')
+        except AttributeError as e:
+            print(e)
+            results = []
+        
+        # Check if results is a list, if not: change into List
         if not isinstance(results, List):
             return [results]
         return results
