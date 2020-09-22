@@ -8,6 +8,7 @@ import time
 import threading
 import pytz
 import pprint
+import tradier_streaming
 
 from absl import app
 
@@ -58,12 +59,18 @@ class OptionControl(object):
 		self.schedule_stock_data_minute()
 		# 11:30AM should be 4:30AM PST time; Market should open around 1AM
 		self.scheduler.every().day.at('11:30').do(self.schedule_stock_data_minute)
+		# Schedule Streaming Data for 5:30AM PST
+		self.scheduler.every().day.at('12:30').do(self.tradier_streaming_start)
 		# Schedule job to return the current running jobs.
 		self.scheduler.every().hour.at(':00').do(self.jobs_check)
 		# Schedule daily job to get option expirations. Refresh around midnight
 		self.scheduler.every().day.at('07:30').do(self.save_option_expirations).tag('daily_option_expiration')
 		pprint.pprint(self.scheduler.jobs)
 		print('Scheduled job: Calendar Check -', datetime.datetime.now())
+
+	def tradier_streaming_start(self):
+		tradier_stream = tradier_streaming.TradierStreamingApi()
+		tradier_stream.start_streaming()
 
 	def jobs_check(self):
 		print('Printing Job Check!')
