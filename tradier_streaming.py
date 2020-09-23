@@ -83,8 +83,14 @@ class TradierStreamingApi():
             print(f"> {payload}")
 
             while True:
-                response = await websocket.receive()
-                response_dict = json.loads(response)
-                print(response_dict)
-                # Write stream data to Mongo
-                self.stocks_db.streaming_data.insert_one(response_dict)
+                try:
+                    response = await websocket.receive()
+                    response_dict = json.loads(response)
+                    # print(response_dict)
+                    # Write stream data to Mongo
+                    self.stocks_db.streaming_data.insert_one(response_dict)
+                except websockets.exceptions.ConnectionClosed as wss_connect_error:
+                    print(wss_connect_error)
+                    print('Websocket Disconnected. Wait 10 seconds and reconnect')
+                    asyncio.sleep(10)
+                    self.start_streaming()
