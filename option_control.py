@@ -70,8 +70,10 @@ class OptionControl(object):
 		print('Scheduled job: Calendar Check -', datetime.datetime.now())
 
 	def tradier_streaming_start(self):
-		tradier_stream = tradier_streaming.TradierStreamingApi()
-		tradier_stream.start_streaming()
+		if self.is_stock_market_open():
+			tradier_stream = tradier_streaming.TradierStreamingApi()
+			worker_thread = threading.Thread(target=tradier_stream.start_streaming)
+			worker_thread.start()
 
 	def jobs_check(self):
 		print('Printing Job Check!')
@@ -105,8 +107,7 @@ class OptionControl(object):
 		today_status = [x for x in calendar_dates if x['date'] == today_str][0]
 		return today_status
 
-	def schedule_stock_data_minute(self):
-
+	def is_stock_market_open(self):
 		today = datetime.datetime.now(tz=PACIFIC_TZ)
 		stock_market_open = today.replace(hour=1, minute=0, second=0, microsecond=0)
 		stock_market_close = today.replace(hour=17, minute=0, second=0, microsecond=0)
@@ -114,6 +115,14 @@ class OptionControl(object):
 		today_market_status = self.get_today_market_status(today)
 
 		if stock_market_open < today < stock_market_close and today_market_status['status'] == 'open':
+			return True
+		return False
+
+	def schedule_stock_data_minute(self):
+		today = datetime.datetime.now(tz=PACIFIC_TZ)
+		stock_market_close = today.replace(hour=17, minute=0, second=0, microsecond=0)
+
+		if self.is_stock_market_open():
 			self.scheduler.every(1).minute.do(self.save_stock_data, stock_market_close).tag('stock_runs')
 			print('Scheduled Stock Jobs!')
 

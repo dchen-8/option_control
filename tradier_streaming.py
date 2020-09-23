@@ -62,7 +62,7 @@ class TradierStreamingApi():
             'linebreak': True
         }
         payload = json.dumps(params)
-        return asyncio.get_event_loop().run_until_complete(self.connect_and_consume(payload))
+        return asyncio.run(self.connect_and_consume(payload))
 
     def get_session_id(self):
         api_endpoint = '/v1/markets/events/session'
