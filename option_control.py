@@ -58,8 +58,8 @@ class OptionControl(object):
 		self.tradier_streaming_start()
 		# On Docker start; Check if Market is open and schedule Stock Runs
 		self.schedule_stock_data_minute()
-		# 11:30AM should be 4:30AM PST time; Market should open around 1AM
-		self.scheduler.every().day.at('11:30').do(self.schedule_stock_data_minute)
+		# 15:30AM be an hour before market opens; Market should open around 5AM
+		self.scheduler.every().day.at('15:30').do(self.schedule_stock_data_minute)
 		# Schedule Streaming Data for 5:30AM PST
 		self.scheduler.every().day.at('12:30').do(self.tradier_streaming_start)
 		# Schedule job to return the current running jobs.
@@ -120,7 +120,8 @@ class OptionControl(object):
 
 	def schedule_stock_data_minute(self):
 		today = datetime.datetime.now(tz=PACIFIC_TZ)
-		stock_market_close = today.replace(hour=17, minute=0, second=0, microsecond=0)
+		# Close should be moved in 3 hours to end closer to when the stock market does
+		stock_market_close = today.replace(hour=14, minute=0, second=0, microsecond=0)
 
 		if self.is_stock_market_open():
 			self.scheduler.every(1).minute.do(self.save_stock_data, stock_market_close).tag('stock_runs')
