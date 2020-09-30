@@ -7,16 +7,6 @@ from typing import Mapping, List, Union
 
 TRADIER_AUTH_TOKEN = os.environ.get('TRADIER_AUTH_TOKEN')
 
-STOCKS_MAPPING = {
-    'time': [],
-    'tags': ['symbol', 'description', 'exch', 'type', 'bidexch', 
-             'bid_date', 'askexch', 'ask_date', 'root_symbols',
-             'trade_date'],
-    'fields': ['last', 'change', 'volume', 'open', 'high', 
-               'low', 'close', 'bid', 'ask', 'change_percentage', 
-               'average_volume', 'last_volume', 'prev_close', 'week_52_high',
-               'week_52_low', 'bidsize', 'asksize'],
-}
 
 class Tradier:
     def __init__(self):
@@ -165,13 +155,11 @@ class Tradier:
             results.append(result)
         return results
 
-    def get_symbol(self, symbol, return_for_influx = False):
+    def get_symbol(self, symbol):
         api_endpoint = '/v1/markets/quotes'
         params = {'symbols': symbol}
         response = self.request(api_endpoint, params)
         result = self.symbol_to_list(response)
-        if return_for_influx:
-            return self.parse_to_mapping(result)
         return result
 
     def symbol_to_list(
@@ -185,25 +173,4 @@ class Tradier:
         # Check if results is a list, if not: change into List
         if not isinstance(results, List):
             return [results]
-        return results
-
-    def parse_to_mapping(self, data: List[Mapping[str, Union[str, int]]]):
-        mapping_used = STOCKS_MAPPING
-        time_map = mapping_used.get('time')
-        tags_map = mapping_used.get('tags')
-        fields_map = mapping_used.get('fields')
-
-        results = []
-        for row in data:
-            result = defaultdict(dict)
-            result['measurement'] = 'stocks'
-            for key, value in row.items():
-                if key in time_map:
-                    result['time'][key] = value
-                if key in tags_map:
-                    result['tags'][key] = value
-                if key in fields_map:
-                    result['fields'][key] = value
-            results.append(result)
-        
         return results

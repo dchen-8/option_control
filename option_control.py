@@ -127,10 +127,18 @@ class OptionControl(object):
 			print('Scheduled Stock Jobs!')
 
 	def save_stock_data(self, end):
-		results = self.collect_stock_data()
+		results = self.tradier.get_symbol(self.stock_list)
 
 		if results:
-			self.influx_client.write(results, 'stocks')
+			# Using Stocks DB
+			stocks_db = self.mongo_client.stocks
+			# Write to market quotes data
+			stocks_db.market_quotes.insert_many(results)
+
+			market_quotes_tick = [{'measurement': 'market_quotes', 'tags': {'symbol': x['symbol']}, 
+																   'fields': {'last': x['last']}} 
+								   for x in results]
+			self.influx_client.write(market_quotes_tick, 'market_quotes')
 		else:
 			print("Tradier API returned no stock data!")
 		
@@ -138,9 +146,6 @@ class OptionControl(object):
 			self.scheduler.clear(tag='stock_runs')
 		# print(self.scheduler.jobs)
 		# return schedule.CancelJob
-
-	def collect_stock_data(self):
-		return self.tradier.get_symbol(self.stock_list, return_for_influx=True)
 
 	def save_historical_stock_data(self):
 		# This is used if there is a need to backfil some data, all the previous data is not overriden
